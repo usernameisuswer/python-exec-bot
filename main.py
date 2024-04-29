@@ -39,6 +39,17 @@ async def execute_code(message: types.Message):
     formatted_message = f"Результат: <pre><code class=\"language-python\"> {result}</code></pre>"
     await message.answer(formatted_message, parse_mode=types.ParseMode.HTML)
 
+def execute_python_code(code: str):
+    try:
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            exec(code)
+        return buffer.getvalue()
+    except SystemExit as se:
+        return f"Произошло преждевременное завершение: {se}"
+    except Exception as e:
+        return str(e)
+
 @dp.inline_handler()
 async def inline_echo(inline_query: types.InlineQuery):
     # Обрабатываем код, переданный через инлайн запрос
