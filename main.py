@@ -6,13 +6,16 @@ from contextlib import redirect_stdout
 import io
 import uuid  # для генерации уникальных ID для inline ответов
 
-API_TOKEN = 'сюда токен бота'
+API_TOKEN = 'YOUR_API_TOKEN'
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
 def execute_python_code(code: str):
     try:
+        if "exit()" in code or "os.system" in code:
+            return "Команда exit() или использование os.system не разрешено."
+        
         buffer = io.StringIO()
         with redirect_stdout(buffer):
             exec(code)
@@ -39,32 +42,17 @@ async def execute_code(message: types.Message):
     formatted_message = f"Результат: <pre><code class=\"language-python\"> {result}</code></pre>"
     await message.answer(formatted_message, parse_mode=types.ParseMode.HTML)
 
-def execute_python_code(code: str):
-    try:
-        buffer = io.StringIO()
-        with redirect_stdout(buffer):
-            exec(code)
-        return buffer.getvalue()
-    except SystemExit as se:
-        return f"Произошло преждевременное завершение: {se}"
-    except Exception as e:
-        return str(e)
-
 @dp.inline_handler()
 async def inline_echo(inline_query: types.InlineQuery):
     # Обрабатываем код, переданный через инлайн запрос
     code = inline_query.query or 'print("Введите код...")'
     result = execute_python_code(code)
 
-    # если результат пустой, заменяем его на предупреждающее сообщение
-    if not result.strip():
-        result = "Код не вернул результат. Пожалуйста, убедитесь, что ваш код выводит данные."
-
-    input_content = InputTextMessageContent(result)
+    input_content = InputTextMessageContent(result, parse_mode=types.ParseMode.MARKDOWN)
     item = InlineQueryResultArticle(
-        id=str(uuid.uuid4()), 
-        title="Выполнить код (dir() и help() не работают в инлайне)",
-        description=result[:100] if len(result) > 100 else result,
+        id=str(uuid.uuid4()),
+        title="Выполнить код",
+        description=result[:100],
         input_message_content=input_content
     )
     await bot.answer_inline_query(inline_query.id, results=[item], cache_time=1)
