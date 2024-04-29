@@ -6,7 +6,7 @@ from contextlib import redirect_stdout
 import io
 import uuid  # для генерации уникальных ID для inline ответов
 
-API_TOKEN = '7149788600:AAEf47b99LjZHYzG2NkD4I-a0YbHIwP-3tw'
+API_TOKEN = 'сюда токен бота'
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
