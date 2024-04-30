@@ -31,14 +31,14 @@ def execute_python_code(code: str):
 
 @dp.message_handler(commands=['start', 'help'])
 async def send_welcome(message: types.Message):
-    await message.reply("Привет!\nЯ бот, который может выполнять Python код. Используй команду вида /run ваш_код для выполнения Python кода или используй меня в инлайн режиме.\nПример: /run print(\"hi\")")
+    await message.reply("Привет!\nЯ бот, который может выполнять Python код. Используй команду вида /py ваш код для выполнения Python кода или используй меня в инлайн режиме.\nПример: /py print(\"hi\")")
 
-@dp.message_handler(commands=['run'])
+@dp.message_handler(commands=['py'])
 async def execute_code(message: types.Message):
     code = message.get_args()
 
     if not code:
-        await message.reply("Пожалуйста, введите код после команды. Пример: /run print(\"hi\")")
+        await message.reply("Пожалуйста, введите код после команды. Пример: /py print(\"hi\")")
         return
 
     result = execute_python_code(code)
@@ -51,30 +51,36 @@ async def execute_code(message: types.Message):
 # Функция для выполнения C++ кода
 def execute_cpp_code(code: str):
     try:
+        # Проверка на использование std::cin и других небезопасных команд
+        if "std::cin" in code or "system" in code or "exit" in code:
+            return "Использование std::cin, system или exit запрещено."
+
         # Сохраняем код C++ во временный файл
         with open('temp.cpp', 'w') as file:
             file.write(code)
-        
+
         # Компилируем C++ код
         compile_process = subprocess.run(['g++', 'temp.cpp', '-o', 'temp'], capture_output=True, text=True)
         if compile_process.returncode != 0:
             # В случае ошибки компиляции возвращаем сообщение об ошибке
             return compile_process.stderr
 
-        # Выполняем скомпилированную программу
-        execute_process = subprocess.run(['./temp'], capture_output=True, text=True)
+        # Выполняем скомпилированную программу с таймаутом
+        execute_process = subprocess.run(['./temp'], capture_output=True, text=True, timeout=5)
         if execute_process.returncode != 0:
             # В случае ошибки выполнения возвращаем сообщение об ошибке
             return execute_process.stderr
-        
+
         # Возвращаем результат выполнения программы
         return execute_process.stdout
+    except subprocess.TimeoutExpired:
+        return "Время выполнения кода превысило ограничение."
     except Exception as e:
         return str(e)
     finally:
         # Удаляем временные файлы
         subprocess.run(['rm', 'temp.cpp', 'temp'])
-
+        
 # Обработчик команды /cpp
 @dp.message_handler(commands=['cpp'])
 async def execute_cpp(message: types.Message):
