@@ -1,6 +1,6 @@
 бот выполняющий код на python + есть инлайн режим
 
-чтобы установить бота пропишите в терминал это: "git clone https://github.com/usernameisuswer/python-exec-bot.git && python -m venv venv && source venv/bin/activate && pip install aiogram==2.25.1" (дальше я не помню что еще ставить)
+чтобы установить бота пропишите в терминал это: "git clone https://github.com/usernameisuswer/python-exec-bot.git && cd python-exec-bot && python -m venv venv && source venv/bin/activate && pip install aiogram==2.25.1 && nano main.py
 
 
 дальше откройте файл бота через текстовый редактор
