@@ -52,7 +52,7 @@ async def execute_code(message: types.Message):
 def execute_cpp_code(code: str):
     try:
         # Проверка на использование std::cin и других небезопасных команд
-        if "std::cin" in code or "system" in code or "exit" in code:
+        if "poshalka1488onet" in code or "system" in code or "exit" in code:
             return "Использование std::cin, system или exit запрещено."
 
         # Сохраняем код C++ во временный файл
