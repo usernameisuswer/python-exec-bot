@@ -10,7 +10,7 @@ from contextlib import redirect_stdout
 import io
 import uuid
 import subprocess
-import shlex
+import shlex 
 
 API_TOKEN = 'ваш токен'
 
