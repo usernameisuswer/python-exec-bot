@@ -102,10 +102,70 @@ async def execute_cpp(message: types.Message):
     # Отправка результата пользователю
     await message.reply(f"Результат:\n```\n{result}\n```", parse_mode=types.ParseMode.MARKDOWN)
     
+# Функция для выполнения Java кода
+def execute_java_code(code: str):
+    try:
+        # Проверка на использование System.exit и других небезопасных команд
+        if "System.exit" in code or "Runtime.getRuntime().exec" in code:
+            return "Использование System.exit или Runtime.getRuntime().exec запрещено."
+
+        # Сохраняем код Java во временный файл
+        with open('Temp.java', 'w') as file:
+            file.write(code)
+
+        # Компилируем Java код
+        compile_process = subprocess.run(['javac', 'Temp.java'], capture_output=True, text=True)
+        if compile_process.returncode != 0:
+            # В случае ошибки компиляции возвращаем сообщение об ошибке
+            return compile_process.stderr
+
+        # Выполняем скомпилированную программу с таймаутом
+        execute_process = subprocess.run(['java', 'Temp'], capture_output=True, text=True, timeout=5)
+        if execute_process.returncode != 0:
+            # В случае ошибки выполнения возвращаем сообщение об ошибке
+            return execute_process.stderr
+
+        # Возвращаем результат выполнения программы
+        return execute_process.stdout
+    except subprocess.TimeoutExpired:
+        return "Время выполнения кода превысило ограничение."
+    except Exception as e:
+        return str(e)
+    finally:
+        # Удаляем временные файлы
+        subprocess.run(['rm', 'Temp.java', 'Temp.class'])
+
+# Обработчик команды /java
+@dp.message_handler(commands=['java'])
+async def execute_java(message: types.Message):
+    code = message.get_args()
+    if not code:
+        await message.reply("Пожалуйста, введите код Java после команды. Пример: /java код")
+        return
+
+    # Проверка на небезопасные команды
+    if "Runtime.getRuntime().exec" in code or "System.exit" in code:
+        await message.reply("Использование небезопасных команд запрещено.")
+        return
+
+    # Выполнение кода
+    result = execute_java_code(code)
+    if len(result) > 4000:
+        result = result[:4000] + "\n... Output truncated."
+
+    # Отправка результата пользователю
+    await message.reply(f"Результат:\n```\n{result}\n```", parse_mode=types.ParseMode.MARKDOWN)
+
+# Добавление поддержки Java в инлайн режим
+
 
 @dp.inline_handler()
 async def inline_echo(inline_query: types.InlineQuery):
     query = inline_query.query
+  # Добавленная поддержка Java
+    if query.startswith("java "):
+        code = query[5:]
+        result = execute_java_code(code)
     if query.startswith("py "):
         code = query[3:]
         result = execute_python_code(code)
