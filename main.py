@@ -105,11 +105,16 @@ async def execute_cpp(message: types.Message):
 
 @dp.inline_handler()
 async def inline_echo(inline_query: types.InlineQuery):
-    # Обрабатываем код, переданный через инлайн запрос
-    code = inline_query.query or 'print("Введите код...")'
-    result = execute_python_code(code)
+    query = inline_query.query
+    if query.startswith("py "):
+        code = query[3:]
+        result = execute_python_code(code)
+    elif query.startswith("cpp "):
+        code = query[4:]
+        result = execute_cpp_code(code)
+    else:
+        result = "Введите префикс 'py' для Python кода или 'cpp' для C++ кода."
 
-    # если результат пустой, заменяем его на предупреждающее сообщение
     if not result.strip():
         result = "Код не вернул результат. Пожалуйста, убедитесь, что ваш код выводит данные."
 
