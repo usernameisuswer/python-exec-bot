@@ -1,4 +1,4 @@
-from aiogram import Bot, Dispatcher, types 
+from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
 from aiogram.dispatcher.filters import Command
 from aiogram.dispatcher.handler import SkipHandler
@@ -8,7 +8,7 @@ import asyncio
 import sys
 from contextlib import redirect_stdout
 import io
-import uuid  # для генерации уникальных ID для inline ответов
+import uuid
 import subprocess
 import shlex
 
@@ -156,31 +156,29 @@ async def execute_java(message: types.Message):
     # Отправка результата пользователю
     await message.reply(f"Результат:\n```\n{result}\n```", parse_mode=types.ParseMode.MARKDOWN)
 
-# Добавление поддержки Java в инлайн режим
-
-
+# Исправление инлайн режима для Java
 @dp.inline_handler()
 async def inline_echo(inline_query: types.InlineQuery):
     query = inline_query.query
-  # Добавленная поддержка Java
-    if query.startswith("java "):
-        code = query[5:]
-        result = execute_java_code(code)
+    result = ""
     if query.startswith("py "):
         code = query[3:]
         result = execute_python_code(code)
     elif query.startswith("cpp "):
         code = query[4:]
         result = execute_cpp_code(code)
+    elif query.startswith("java "):
+        code = query[5:]
+        result = execute_java_code(code)
     else:
-        result = "Введите префикс 'py' для Python кода или 'cpp' для C++ кода."
+        result = "Введите префикс 'py' для Python кода, 'cpp' для C++ кода или 'java' для Java кода."
 
     if not result.strip():
         result = "Код не вернул результат. Пожалуйста, убедитесь, что ваш код выводит данные."
 
     input_content = InputTextMessageContent(result)
     item = InlineQueryResultArticle(
-        id=str(uuid.uuid4()), 
+        id=str(uuid.uuid4()),
         title="Выполнить код",
         description=result[:100] if len(result) > 100 else result,
         input_message_content=input_content
