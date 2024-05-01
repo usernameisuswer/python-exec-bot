@@ -11,3 +11,5 @@ nano main.py
 
 дальше python main.py
 
+
+для установки бота без chatgpt (ну и соответственно базы Админов и банов) пропишите git checkout -qf 1dce9163d181322e3040198715faf97db972c8cf
