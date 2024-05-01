@@ -12,10 +12,87 @@ import uuid
 import subprocess
 import shlex 
 
+# Добавьте свой токен от OpenAI
+OPENAI_TOKEN = 'ваш токен openai'
+
+# Ваш токен от Telegram Bot API
 API_TOKEN = 'ваш токен'
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
+
+# Ваша база данных администраторов (пример)
+admins = {'admin_id1', 'admin_id2'}
+
+# Ваша база данных заблокированных пользователей (пример)
+banned_users = set()
+
+# Функция для выполнения запросов к OpenAI ChatGPT
+async def ask_openai(prompt):
+    # Здесь должен быть ваш код для выполнения запросов к OpenAI ChatGPT
+    pass
+
+@dp.message_handler(commands=['ask'])
+async def ask_command(message: types.Message):
+    if str(message.from_user.id) in banned_users:
+        await message.reply("Вы заблокированы и не можете использовать эту команду.")
+        return
+
+    prompt = message.get_args()
+    if not prompt:
+        await message.reply("Пожалуйста, введите ваш запрос после команды. Пример: /ask Какой сегодня день?")
+        return
+
+    # Ограничение на количество запросов в час для пользователя
+    # Здесь должен быть ваш код для отслеживания и ограничения запросов
+
+    response = await ask_openai(prompt)
+    await message.reply(response)
+
+@dp.message_handler(commands=['ban'])
+async def ban_command(message: types.Message):
+    if str(message.from_user.id) not in admins:
+        await message.reply("У вас нет прав для использования этой команды.")
+        return
+
+    user_id = message.get_args()
+    if not user_id:
+        await message.reply("Пожалуйста, укажите ID пользователя для блокировки. Пример: /ban 123456789")
+        return
+
+    banned_users.add(user_id)
+    await message.reply(f"Пользователь {user_id} заблокирован.")
+
+@dp.message_handler(commands=['adminadd'])
+async def admin_add_command(message: types.Message):
+    if str(message.from_user.id) not in admins:
+        await message.reply("У вас нет прав для использования этой команды.")
+        return
+
+    new_admin_id = message.get_args()
+    if not new_admin_id:
+        await message.reply("Пожалуйста, укажите ID пользователя для добавления в администраторы. Пример: /adminadd 123456789")
+        return
+
+    admins.add(new_admin_id)
+    await message.reply(f"Пользователь {new_admin_id} добавлен в администраторы.")
+
+@dp.message_handler(commands=['adminremove'])
+async def admin_remove_command(message: types.Message):
+    if str(message.from_user.id) not in admins:
+        await message.reply("У вас нет прав для использования этой команды.")
+        return
+
+    admin_id = message.get_args()
+    if not admin_id:
+        await message.reply("Пожалуйста, укажите ID администратора для удаления. Пример: /adminremove 123456789")
+        return
+
+    if admin_id in admins:
+        admins.remove(admin_id)
+        await message.reply(f"Администратор {admin_id} удалён.")
+    else:
+        await message.reply("Пользователь не найден среди администраторов.")
 
 def execute_python_code(code: str):
     try:
