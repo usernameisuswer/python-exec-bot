@@ -278,4 +278,5 @@ async def inline_echo(inline_query: types.InlineQuery):
     await bot.answer_inline_query(inline_query.id, results=[item], cache_time=1)
 
 if __name__ == '__main__':
+    openai.api_key = OPENAI_API_KEY
     executor.start_polling(dp, skip_updates=True)
