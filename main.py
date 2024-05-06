@@ -11,11 +11,13 @@ import io
 import uuid
 import subprocess
 import shlex 
-import Command
+import command
 import openai
+import time
+from g4f.client import Client
 
-API_TOKEN = 'ваш токен'
-OPENAI_API_KEY = 'ваш ключ OpenAI'
+
+API_TOKEN ='ваш_токен'
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
@@ -24,54 +26,26 @@ dp = Dispatcher(bot)
 user_requests = {}
 
 # Список администраторов
-admins = []
+admins = [7096725222]
 
-# Функция для проверки лимита запросов
-def check_limit(user_id):
-    if user_id in user_requests:
-        requests, timestamp = user_requests[user_id]
-        # Проверяем, прошел ли час с момента первого запроса
-        if (time.time() - timestamp) > 3600:
-            user_requests[user_id] = (1, time.time())
-            return True
-        else:
-            # Проверяем лимит запросов
-            if requests < 10:
-                user_requests[user_id] = (requests + 1, timestamp)
-                return True
-            else:
-                return False
-    else:
-        user_requests[user_id] = (1, time.time())
-        return True
+# Инициализация клиента GPT-4
+client = Client()
 
-# Функция для выполнения запросов к ChatGPT
-async def ask_openai(prompt):
-    try:
-        response = openai.Completion.create(
-            engine="davinci",
-            prompt=prompt,
-            max_tokens=150
-        )
-        return response.choices[0].text.strip()
-    except Exception as e:
-        return str(e)
 
-# Команда /ask
 @dp.message_handler(commands=['ask'])
-async def ask_command(message: types.Message):
-    user_id = message.from_user.id
-    if user_id not in admins and not check_limit(user_id):
-        await message.reply("Вы исчерпали лимит запросов. Попробуйте позже.")
-        return
+async def ask_question(message: types.Message):
+    """
+    Эта команда получает текст после команды /ask и отправляет его в GPT-4
+    """
+    request = message.get_args()
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[{
+            "role": "user", "content": request
+        }]
+    )
+    await message.answer(response.choices[0].message.content)
 
-    prompt = message.get_args()
-    if not prompt:
-        await message.reply("Пожалуйста, введите запрос после команды. Пример: /ask Какой сегодня день?")
-        return
-
-    response = await ask_openai(prompt)
-    await message.reply(response)
 
 # Команда /ban
 @dp.message_handler(commands=['ban'])
@@ -278,5 +252,4 @@ async def inline_echo(inline_query: types.InlineQuery):
     await bot.answer_inline_query(inline_query.id, results=[item], cache_time=1)
 
 if __name__ == '__main__':
-    openai.api_key = OPENAI_API_KEY
     executor.start_polling(dp, skip_updates=True)
